@@ -1,4 +1,4 @@
-"""DB client — read-only Oracle/PostgreSQL/MSSQL/MySQL query interface.
+"""DB client — read-only Oracle/PostgreSQL/MySQL query interface.
 
 SECURITY: DML and DDL statements (INSERT/UPDATE/DELETE/DROP/ALTER/CREATE/TRUNCATE/MERGE
 etc.) are BLOCKED. Only SELECT queries are permitted.

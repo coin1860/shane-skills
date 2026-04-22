@@ -28,7 +28,6 @@ KEYRING_CONFLUENCE_TOKEN = f"{APP_NAME}:confluence_token"
 DB_TYPE_DEFAULTS: dict[str, tuple[int, str]] = {
     "Oracle": (1521, "oracle+oracledb"),
     "PostgreSQL": (5432, "postgresql+psycopg2"),
-    "MSSQL": (1433, "mssql+pyodbc"),
     "MySQL": (3306, "mysql+pymysql"),
 }
 
@@ -186,9 +185,7 @@ class Config:
             # Oracle DSN: oracle+oracledb://user:pass@host:port/?service_name=SVC
             svc = service_name or database
             return f"{driver}://{auth}{host}:{port}/?service_name={svc}"
-        elif "mssql" in driver:
-            db = database or service_name
-            return f"{driver}://{auth}{host}:{port}/{db}?driver=ODBC+Driver+17+for+SQL+Server"
+
         else:
             db = database or service_name
             return f"{driver}://{auth}{host}:{port}/{db}"

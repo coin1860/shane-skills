@@ -92,18 +92,7 @@ def test_build_db_url_oracle():
     url = cfg.build_db_url("ora_db")
     assert url == "oracle+oracledb://ora_u:mock_password@ora.host:1521/?service_name=ORA_SVC"
 
-def test_build_db_url_mssql():
-    cfg = Config()
-    cfg.add_db_connection(
-        name="ms_db",
-        host="ms.host",
-        port=1433,
-        username="ms_u",
-        driver="mssql+pyodbc",
-        database="ms_db"
-    )
-    url = cfg.build_db_url("ms_db")
-    assert url == "mssql+pyodbc://ms_u:mock_password@ms.host:1433/ms_db?driver=ODBC+Driver+17+for+SQL+Server"
+
 
 def test_resolved_skills_root():
     cfg = Config()

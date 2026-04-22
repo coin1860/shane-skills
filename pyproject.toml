@@ -44,7 +44,6 @@ dependencies = [
 
     # DB access
     "sqlalchemy>=2.0",     # Multi-DB ORM + raw query support
-    "pyodbc>=5.0",         # MSSQL / ODBC driver support
 ]
 
 [project.optional-dependencies]
