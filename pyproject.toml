@@ -1,0 +1,76 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "shane-skills"
+version = "0.1.0"
+description = "Personal AI skills & agent library for HSBC SDLC workflows"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Shane Shou" }]
+keywords = ["github-copilot", "opencode", "sdlc", "ai", "skills", "agents"]
+
+dependencies = [
+    # CLI framework
+    "click>=8.1",
+    "rich>=13.0",          # Beautiful terminal output
+
+    # Config & secrets
+    "keyring>=25.0",       # OS keychain integration (secure token storage)
+    "toml>=0.10",          # Config file parsing
+
+    # Jira & Confluence
+    "atlassian-python-api>=3.41",
+
+    # HTTP
+    "httpx>=0.27",
+    "requests>=2.31",      # Web fetch (lightweight URL→Markdown)
+
+    # HTML parsing & Markdown conversion (web fetch + Atlassian content)
+    "beautifulsoup4>=4.12",
+    "markdownify>=0.12",
+
+    # GUI (choose one based on preference)
+    # Option A: Textual (TUI — modern, no system deps)
+    "textual>=0.60",
+    # Option B: PyQt6 (native GUI — requires Qt) — uncomment if preferred
+    # "PyQt6>=6.7",
+
+    # CLI Interactions
+    "InquirerPy>=0.3.4",
+    "pyyaml>=6.0",
+
+    # DB access
+    "sqlalchemy>=2.0",     # Multi-DB ORM + raw query support
+    "pyodbc>=5.0",         # MSSQL / ODBC driver support
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio",
+    "ruff",
+    "mypy",
+]
+ora = [
+    "oracledb>=2.0",       # Oracle thin mode — no Instant Client required
+]
+pyqt = [
+    "PyQt6>=6.7",
+]
+
+[project.scripts]
+shane-skills = "shane_skills.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/shane_skills"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true

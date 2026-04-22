@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+bin/
+include/
+lib/
+.pytest_cache/
+.env
+dist/
+build/
+*.egg-info/
+.ruff_cache/
+.mypy_cache/
+pyvenv.cfg
+.coverage
+
+# User config (stays local)
+~/.shane-skills/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# macOS
+.DS_Store
+
+# Agent
+.agent/
