@@ -44,6 +44,15 @@ dependencies = [
 
     # DB access
     "sqlalchemy>=2.0",     # Multi-DB ORM + raw query support
+
+    # Knowledge graph (vendored — see vendor/graphify/)
+    # graphify dependencies bundled via local path below
+    "networkx",
+    "tree-sitter>=0.23.0",
+    "tree-sitter-python",
+    "tree-sitter-javascript",
+    "tree-sitter-typescript",
+    "tree-sitter-java",
 ]
 
 [project.optional-dependencies]
@@ -62,9 +71,18 @@ pyqt = [
 
 [project.scripts]
 shane-skills = "shane_skills.cli:main"
+graphify = "graphify.__main__:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/shane_skills"]
+packages = ["src/shane_skills", "vendor/graphify/graphify"]
+
+# ---------------------------------------------------------------------------
+# Vendored local packages
+# ---------------------------------------------------------------------------
+# graphify is vendored under vendor/graphify/ and installed as a path dep.
+# To upgrade: delete vendor/graphify/ and copy new release source in.
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.ruff]
 line-length = 100

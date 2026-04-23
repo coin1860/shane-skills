@@ -28,3 +28,12 @@ pyvenv.cfg
 
 # Agent
 .agent/
+
+# Vendored deps — keep source, ignore nested git metadata
+vendor/graphify/.git/
+vendor/graphify/.github/
+vendor/graphify/tests/
+vendor/graphify/docs/
+vendor/graphify/worked/
+vendor/graphify/*.egg-info/
+vendor/graphify/__pycache__/

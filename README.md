@@ -35,6 +35,8 @@ The following skills are available as atomic CLI commands under `shane-skills <s
 | **Database** | Data Exploration | Read-only access to **Oracle**, **PostgreSQL**, and **MySQL**. Schema discovery & table description. |
 | **Web Fetch** | Intelligence | Convert any URL (documentation, wikis) into clean Markdown context. |
 | **Python** | Standards | Integrated best practices for type hints, ruff linting, and async testing. |
+| **Graph Build** | Intelligence | Build a knowledge graph from any folder of files. Generates clustered communities, HTML, JSON, and a report. (`/graphify`) |
+| **Graph Query** | Intelligence | Query a graphify knowledge graph to traverse, explain nodes, or find shortest paths. (`/graphify query`) |
 
 ---
 
@@ -54,6 +56,12 @@ Performs thorough reviews against HSBC engineering standards:
 *   **Security**: Detects hardcoded secrets and SQL injection patterns.
 *   **Quality**: Enforces SOLID principles, DRY, and strict type hinting.
 *   **Testing**: Validates unit test coverage for new logic.
+
+#### 3. GraphRAG Agent (`graph-rag`)
+Knowledge graph RAG agent — builds a graph from any corpus, then answers questions by traversing it.
+*   **Graph Creation**: Uses the `graph-build` skill to extract, cluster, and visualize any corpus into a knowledge graph.
+*   **Graph Traversal**: Uses the `graph-query` skill to answer questions, explain nodes, and trace paths through an existing graph.
+*   **Accuracy**: Never re-reads source files to answer questions, relying on the graph first. Always cites sources and never invents connections.
 
 ---
 
