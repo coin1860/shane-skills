@@ -53,6 +53,12 @@ dependencies = [
     "tree-sitter-javascript",
     "tree-sitter-typescript",
     "tree-sitter-java",
+
+    # Browser automation (vendored — see vendor/browser-harness/)
+    "websockets",
+    "cdp-use",
+    "fetch-use",
+    "Pillow",
 ]
 
 [project.optional-dependencies]
@@ -72,15 +78,17 @@ pyqt = [
 [project.scripts]
 shane-skills = "shane_skills.cli:main"
 graphify = "graphify.__main__:main"
+browser-harness = "browser_harness.run:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/shane_skills", "vendor/graphify/graphify"]
+packages = ["src/shane_skills", "vendor/graphify/graphify", "vendor/browser-harness/src/browser_harness"]
 
 # ---------------------------------------------------------------------------
 # Vendored local packages
 # ---------------------------------------------------------------------------
 # graphify is vendored under vendor/graphify/ and installed as a path dep.
-# To upgrade: delete vendor/graphify/ and copy new release source in.
+# browser-harness is vendored under vendor/browser-harness/ and installed as a path dep.
+# To upgrade: delete vendor/graphify/ or vendor/browser-harness/ and copy new release source in.
 [tool.hatch.metadata]
 allow-direct-references = true
 

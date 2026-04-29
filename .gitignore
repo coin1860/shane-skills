@@ -29,6 +29,9 @@ pyvenv.cfg
 # Agent
 .agent/
 
+# Temp files
+tmp/
+
 # Vendored deps — keep source, ignore nested git metadata
 vendor/graphify/.git/
 vendor/graphify/.github/

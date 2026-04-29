@@ -128,7 +128,9 @@ Files:
 FILE_LIST
 ```
 
-Collect all subagent responses and merge them:
+Once you have received **all** subagent responses, collect them into Python dicts and merge. **Do not run this command with an empty list** — wait until every subagent has replied.
+
+Replace `CHUNK_LIST` with the actual list of dicts (e.g. `[{"nodes":[...], "edges":[...]}, {"nodes":[...], ...}]`):
 
 ```python
 python -c "
@@ -148,9 +150,9 @@ if cached_path.exists():
     all_edges.extend(cached.get('edges', []))
     all_hyperedges.extend(cached.get('hyperedges', []))
 
-# PASTE each subagent response here as chunk_1, chunk_2, etc.
-for chunk_json in []:  # replace [] with your chunk results
-    chunk = json.loads(chunk_json) if isinstance(chunk_json, str) else chunk_json
+# Replace CHUNK_LIST with all subagent response dicts collected above
+for chunk in CHUNK_LIST:
+    chunk = json.loads(chunk) if isinstance(chunk, str) else chunk
     all_nodes.extend(chunk.get('nodes', []))
     all_edges.extend(chunk.get('edges', []))
     all_hyperedges.extend(chunk.get('hyperedges', []))
@@ -160,6 +162,8 @@ Path('graphify-out/.graphify_extract.json').write_text(json.dumps(merged, indent
 print(f'Merged: {len(all_nodes)} nodes, {len(all_edges)} edges')
 "
 ```
+
+> ⚠️ If `CHUNK_LIST` would be `[]` (no uncached files needed extraction), omit the loop — just merge AST + cached.
 
 ### Step 4 - Build graph and cluster
 
@@ -236,30 +240,37 @@ Replace `INPUT_PATH` with the actual path.
 python -c "
 import json
 from graphify.build import build_from_json
-from graphify.cluster import cluster
-from graphify.analyze import god_nodes, surprising_connections
+from graphify.cluster import score_all
+from graphify.analyze import god_nodes, surprising_connections, suggest_questions
 from graphify.report import generate
 from pathlib import Path
 
 extraction = json.loads(Path('graphify-out/.graphify_extract.json').read_text())
-analysis = json.loads(Path('graphify-out/.graphify_analysis.json').read_text())
+analysis   = json.loads(Path('graphify-out/.graphify_analysis.json').read_text())
+labels_raw = json.loads(Path('graphify-out/.graphify_labels.json').read_text()) if Path('graphify-out/.graphify_labels.json').exists() else {}
+detect     = json.loads(Path('graphify-out/.graphify_detect.json').read_text())
 
-G = build_from_json(extraction)
+G           = build_from_json(extraction)
 communities = {int(k): v for k, v in analysis['communities'].items()}
-gods = god_nodes(G)
-surprises = surprising_connections(G, communities)
+labels      = {int(k): v for k, v in labels_raw.items()}
+cohesion    = score_all(G, communities)
+gods        = god_nodes(G)
+surprises   = surprising_connections(G, communities)
+questions   = suggest_questions(G, communities, labels)
+token_cost  = {'input': extraction.get('input_tokens', 0), 'output': extraction.get('output_tokens', 0)}
 
-report = generate(G, communities, {}, {}, gods, surprises, extraction)
+report = generate(G, communities, cohesion, labels, gods, surprises, detect, token_cost, 'INPUT_PATH', suggested_questions=questions)
 Path('graphify-out/GRAPH_REPORT.md').write_text(report)
 print('GRAPH_REPORT.md written')
 "
 ```
 
+Replace `INPUT_PATH` with the actual corpus path used in Step 2.
+
 ```python
 python -c "
 import json
 from graphify.build import build_from_json
-from graphify.cluster import cluster
 from graphify.export import to_html
 from pathlib import Path
 
@@ -267,9 +278,9 @@ extraction = json.loads(Path('graphify-out/.graphify_extract.json').read_text())
 analysis   = json.loads(Path('graphify-out/.graphify_analysis.json').read_text())
 labels_raw = json.loads(Path('graphify-out/.graphify_labels.json').read_text()) if Path('graphify-out/.graphify_labels.json').exists() else {}
 
-G = build_from_json(extraction)
-communities = cluster(G)
-labels = {int(k): v for k, v in labels_raw.items()}
+G           = build_from_json(extraction)
+communities = {int(k): v for k, v in analysis['communities'].items()}  # reuse Step 4 result, don't re-cluster
+labels      = {int(k): v for k, v in labels_raw.items()}
 
 try:
     to_html(G, communities, 'graphify-out/graph.html', community_labels=labels or None)

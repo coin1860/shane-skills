@@ -55,12 +55,12 @@ Load `graphify-out/graph.json`, then:
 ```python
 python -c "
 import sys, json
-from networkx.readwrite import json_graph
 import networkx as nx
+from graphify.build import build_from_json
 from pathlib import Path
 
 data = json.loads(Path('graphify-out/graph.json').read_text())
-G = json_graph.node_link_graph(data, edges='links')
+G = build_from_json(data)
 
 question = 'QUESTION'
 mode = 'MODE'  # 'bfs' or 'dfs'
@@ -113,7 +113,7 @@ else:
         frontier = next_frontier
 
 # Token-budget aware output: rank by relevance, cut at budget (~4 chars/token)
-token_budget = BUDGET  # default 2000
+token_budget = 2000  # default; override with --budget N
 char_budget = token_budget * 4
 
 def relevance(nid):
@@ -169,11 +169,11 @@ if not Path('graphify-out/graph.json').exists():
 python -c "
 import json, sys
 import networkx as nx
-from networkx.readwrite import json_graph
+from graphify.build import build_from_json
 from pathlib import Path
 
 data = json.loads(Path('graphify-out/graph.json').read_text())
-G = json_graph.node_link_graph(data, edges='links')
+G = build_from_json(data)
 
 term = 'NODE_NAME'
 term_lower = term.lower()
@@ -235,11 +235,11 @@ if not Path('graphify-out/graph.json').exists():
 python -c "
 import json, sys
 import networkx as nx
-from networkx.readwrite import json_graph
+from graphify.build import build_from_json
 from pathlib import Path
 
 data = json.loads(Path('graphify-out/graph.json').read_text())
-G = json_graph.node_link_graph(data, edges='links')
+G = build_from_json(data)
 
 a_term = 'NODE_A'
 b_term = 'NODE_B'
