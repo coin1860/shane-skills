@@ -53,6 +53,7 @@ dependencies = [
     "tree-sitter-javascript",
     "tree-sitter-typescript",
     "tree-sitter-java",
+    "markitdown",          # Used for PDF/Word extraction in subagents
 
     # Browser automation (vendored — see vendor/browser-harness/)
     "websockets",
