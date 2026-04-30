@@ -1,7 +1,7 @@
 ---
 name: graph-build
 description: Build a knowledge graph from any folder of files → clustered communities → HTML + JSON + GRAPH_REPORT.md
-trigger: /graphify
+trigger: /graph-build
 ---
 
 # /graphify
@@ -11,11 +11,11 @@ Turn any folder of files into a navigable knowledge graph with community detecti
 ## Usage
 
 ```
-/graphify                     # full pipeline on current directory
-/graphify <path>              # full pipeline on specific path
-/graphify <path> --update     # incremental - re-extract only new/changed files
-/graphify <path> --no-viz     # skip visualization, just report + JSON
-/graphify <path> --wiki       # build agent-crawlable wiki
+/graph-build                     # full pipeline on current directory
+/graph-build <path>              # full pipeline on specific path
+/graph-build <path> --update     # incremental - re-extract only new/changed files
+/graph-build <path> --no-viz     # skip visualization, just report + JSON
+/graph-build <path> --wiki       # build agent-crawlable wiki
 ```
 
 ## What You Must Do When Invoked
@@ -385,4 +385,4 @@ Then immediately offer to explore. Pick the single most interesting suggested qu
 
 > "The most interesting question this graph can answer: **[question]**. Want me to trace it?"
 
-If the user says yes, use `/graphify query` to walk them through the answer.
+If the user says yes, use `/graph-query` to walk them through the answer.

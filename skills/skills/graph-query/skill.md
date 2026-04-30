@@ -1,28 +1,28 @@
 ---
 name: graph-query
 description: Query a graphify knowledge graph — traverse, explain nodes, find shortest paths
-trigger: /graphify query
+trigger: /graph-query
 ---
 
-# /graphify query
+# /graph-query
 
 Query a pre-built knowledge graph using BFS or DFS traversal, explain individual nodes, or find shortest paths between concepts.
 
-> **Prerequisite:** A graph must already exist at `graphify-out/graph.json`. If it doesn't, run `/graphify <path>` first to build it.
+> **Prerequisite:** A graph must already exist at `graphify-out/graph.json`. If it doesn't, run `/graph-build <path>` first to build it.
 
 ## Usage
 
 ```
-/graphify query "<question>"          # BFS traversal — broad context
-/graphify query "<question>" --dfs    # DFS — trace a specific path
-/graphify query "<question>" --budget 1500   # cap answer at N tokens
-/graphify explain "<node name>"       # plain-language explanation of a node
-/graphify path "<NodeA>" "<NodeB>"    # shortest path between two concepts
+/graph-query "<question>"          # BFS traversal — broad context
+/graph-query "<question>" --dfs    # DFS — trace a specific path
+/graph-query "<question>" --budget 1500   # cap answer at N tokens
+/graph-query explain "<node name>"       # plain-language explanation of a node
+/graph-query path "<NodeA>" "<NodeB>"    # shortest path between two concepts
 ```
 
 ---
 
-## For /graphify query
+## For /graph-query (BFS/DFS traversal)
 
 Two traversal modes — choose based on the question:
 
