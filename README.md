@@ -36,8 +36,8 @@ The following skills are available as atomic CLI commands under `shane-skills <s
 | **Web Fetch** | Intelligence | Convert any URL (documentation, wikis) into clean Markdown context. |
 | **Python** | Standards | Integrated best practices for type hints, ruff linting, and async testing. |
 | **Browser** | E2E Automation | Control a live Chrome browser via `browser-harness` for E2E testing of internal web apps. |
-| **Graph Build** | Intelligence | Build a knowledge graph from any folder of files. Generates clustered communities, HTML, JSON, and a report. (`/graphify`) |
-| **Graph Query** | Intelligence | Query a graphify knowledge graph to traverse, explain nodes, or find shortest paths. (`/graphify query`) |
+| **Graph Build** | Intelligence | Build a knowledge graph from any folder of files. Generates clustered communities, HTML, JSON, and a report. (`/graph-build`) |
+| **Graph Query** | Intelligence | Query a graphify knowledge graph to traverse, explain nodes, or find shortest paths. (`/graph-query`) |
 
 ---
 
@@ -124,18 +124,23 @@ The `graph-build` and `graph-query` skills power a full **GraphRAG pipeline** �
 
 #### Pipeline Overview
 
+```bash
+/graph-build <path>          # Full build: detect → extract → cluster → report + HTML
+/graph-build <path> --update # Incremental: re-extract only new/changed files
+/graph-build <path> --no-viz # Skip visualization, just report + JSON
+/graph-build <path> --wiki   # Also generate an agent-crawlable wiki
 ```
-/graphify <path>          # Full build: detect → extract → cluster → report + HTML
-/graphify <path> --update # Incremental: re-extract only new/changed files
-/graphify <path> --no-viz # Skip visualization, just report + JSON
-/graphify <path> --wiki   # Also generate an agent-crawlable wiki
+
+**Tip for Copilot users**: Invoke this via the agent for automatic parallel processing of large files:
+```text
+@graph-rag /graph-build ./raw
 ```
 
 The pipeline produces three outputs in `graphify-out/`:
 
 | Output | Description |
 | :--- | :--- |
-| `graph.json` | GraphRAG-ready node-link JSON, queryable by `/graphify query` |
+| `graph.json` | GraphRAG-ready node-link JSON, queryable by `/graph-query` |
 | `graph.html` | Interactive visualization — open in any browser |
 | `GRAPH_REPORT.md` | Plain-language architecture summary with God Nodes & Surprising Connections |
 | `wiki/` | Agent-crawlable wiki articles (only with `--wiki`) |
@@ -159,12 +164,18 @@ The `graph-build` skill (`skills/skills/graph-build/skill.md`) drives a **6-step
 
 Once a graph exists at `graphify-out/graph.json`, use the `graph-query` skill:
 
+```bash
+/graph-query "<question>"          # BFS traversal — broad context
+/graph-query "<question>" --dfs    # DFS — trace a specific dependency chain
+/graph-query "<question>" --budget 1500  # Cap answer at N tokens
+/graph-query explain "<node name>"       # Plain-language explanation of one node
+/graph-query path "<NodeA>" "<NodeB>"    # Shortest path between two concepts
 ```
-/graphify query "<question>"          # BFS traversal — broad context
-/graphify query "<question>" --dfs    # DFS — trace a specific dependency chain
-/graphify query "<question>" --budget 1500  # Cap answer at N tokens
-/graphify explain "<node name>"       # Plain-language explanation of one node
-/graphify path "<NodeA>" "<NodeB>"    # Shortest path between two concepts
+
+**Tip for Copilot users**: You can query the graph conversationally via the agent:
+```text
+@graph-rag 这些文档里的核心概念是什么？
+@graph-rag explain "AuthModule"
 ```
 
 **Traversal modes:**
@@ -185,7 +196,7 @@ The `graph-rag` agent (`skills/agents/graph-rag.agent.md`) automatically routes 
 | `graphify-out/graph.json` does not exist | Run `graph-build` on the current directory (or given path) |
 | `graph.json` exists but `GRAPH_REPORT.md` missing | Resume `graph-build` from Step 6 |
 | Both exist and user asks a question | Use `graph-query` |
-| User says `build` or `/graphify <path>` | Force `graph-build` |
+| User says `build` or `/graph-build <path>` | Force `graph-build` |
 | User says `query`, `explain`, or `path` | Force `graph-query` |
 | Graph exists, no subcommand given | Default to `graph-query` — treat input as a question |
 
