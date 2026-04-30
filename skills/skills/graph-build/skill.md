@@ -91,11 +91,11 @@ else:
 "
 ```
 
-#### Part B - Semantic extraction (AI, costs tokens)
+#### Part B - Semantic extraction (parallel subagents)
 
 Skip if corpus is code-only (no docs, papers, or images).
 
-Check cache first:
+**Step B0 — Check cache**
 
 ```python
 python -c "
@@ -114,56 +114,105 @@ print(f'Cache: {len(all_files)-len(uncached)} hit, {len(uncached)} need extracti
 "
 ```
 
-For each chunk of uncached files (20-25 files per chunk), dispatch a subagent with this prompt:
+
+If `graphify-out/.graphify_uncached.txt` is empty (all files cached), skip to Part C.
+
+**Step B1 — Split uncached files into chunks**
+
+Load the uncached file list. Split into chunks of **15 files** each. Group files from the same directory together. Images get their own chunk of max 5 (vision is token-heavy).
+
+Print: `Semantic extraction: ~N files → X subagents, estimated ~Ys`
+
+**Step B2 — Dispatch ALL subagents in one message (parallel)**
+
+> **MANDATORY**: Call `runSubagent("graphify-extractor", ...)` once per chunk, **all in the same response**. Sequential calls are 5-10× slower.
+
+For each chunk, substitute FILE_LIST, CHUNK_NUM, TOTAL_CHUNKS:
 
 ```
-You are a graphify extraction subagent. Read the files listed and extract a knowledge graph fragment.
-Output ONLY valid JSON: {"nodes": [...], "edges": [...], "hyperedges": [...]}
+Extract chunk CHUNK_NUM of TOTAL_CHUNKS.
 
-Each node: {"id": "unique_id", "label": "Human Name", "file_type": "code|document|paper|image"}
-Each edge: {"source": "id", "target": "id", "relation": "verb_phrase", "confidence": "EXTRACTED|INFERRED|AMBIGUOUS"}
-hyperedges: [] unless you find a genuine group relationship
-
-Files:
+Files to process:
 FILE_LIST
+
+Write your output to: graphify-out/.graphify_chunk_CHUNK_NUM.json
 ```
 
-Once you have received **all** subagent responses, collect them into Python dicts and merge. **Do not run this command with an empty list** — wait until every subagent has replied.
+**Step B3 — Collect results and save cache**
 
-Replace `CHUNK_LIST` with the actual list of dicts (e.g. `[{"nodes":[...], "edges":[...]}, {"nodes":[...], ...}]`):
+Wait for all subagents. For each `graphify-out/.graphify_chunk_N.json`:
+- File exists + valid `nodes`/`edges` → include
+- File missing → print `chunk N missing — skipping`
+- More than half chunks missing → stop, tell user to re-run
+
+```python
+python -c "
+import json, glob
+from graphify.cache import save_semantic_cache
+from pathlib import Path
+
+new_nodes, new_edges, new_hyperedges = [], [], []
+for f in sorted(glob.glob('graphify-out/.graphify_chunk_*.json')):
+    try:
+        c = json.loads(Path(f).read_text())
+        new_nodes.extend(c.get('nodes', []))
+        new_edges.extend(c.get('edges', []))
+        new_hyperedges.extend(c.get('hyperedges', []))
+    except Exception as e:
+        print(f'Warning: {f} unreadable: {e}')
+
+Path('graphify-out/.graphify_semantic_new.json').write_text(
+    json.dumps({'nodes': new_nodes, 'edges': new_edges, 'hyperedges': new_hyperedges,
+                'input_tokens': 0, 'output_tokens': 0}))
+if new_nodes or new_edges:
+    save_semantic_cache(new_nodes, new_edges, new_hyperedges)
+    print(f'{len(new_nodes)} nodes, {len(new_edges)} edges cached')
+"
+```
+
+#### Part C - Merge cached + new + AST
 
 ```python
 python -c "
 import json
 from pathlib import Path
 
-all_nodes, all_edges, all_hyperedges = [], [], []
+ast    = json.loads(Path('graphify-out/.graphify_ast.json').read_text())
+cached = json.loads(Path('graphify-out/.graphify_cached.json').read_text()) if Path('graphify-out/.graphify_cached.json').exists() else {'nodes':[],'edges':[],'hyperedges':[]}
+new    = json.loads(Path('graphify-out/.graphify_semantic_new.json').read_text()) if Path('graphify-out/.graphify_semantic_new.json').exists() else {'nodes':[],'edges':[],'hyperedges':[]}
 
-ast = json.loads(Path('graphify-out/.graphify_ast.json').read_text())
-all_nodes.extend(ast.get('nodes', []))
-all_edges.extend(ast.get('edges', []))
+all_nodes = list(ast.get('nodes', []))
+all_edges = list(ast.get('edges', []))
+all_hyperedges = []
+seen = {n['id'] for n in all_nodes}
 
-cached_path = Path('graphify-out/.graphify_cached.json')
-if cached_path.exists():
-    cached = json.loads(cached_path.read_text())
-    all_nodes.extend(cached.get('nodes', []))
-    all_edges.extend(cached.get('edges', []))
-    all_hyperedges.extend(cached.get('hyperedges', []))
+for n in (cached.get('nodes', []) + new.get('nodes', [])):
+    if n['id'] not in seen:
+        all_nodes.append(n)
+        seen.add(n['id'])
+all_edges      += cached.get('edges', [])      + new.get('edges', [])
+all_hyperedges += cached.get('hyperedges', []) + new.get('hyperedges', [])
 
-# Replace CHUNK_LIST with all subagent response dicts collected above
-for chunk in CHUNK_LIST:
-    chunk = json.loads(chunk) if isinstance(chunk, str) else chunk
-    all_nodes.extend(chunk.get('nodes', []))
-    all_edges.extend(chunk.get('edges', []))
-    all_hyperedges.extend(chunk.get('hyperedges', []))
-
-merged = {'nodes': all_nodes, 'edges': all_edges, 'hyperedges': all_hyperedges, 'input_tokens': 0, 'output_tokens': 0}
+merged = {'nodes': all_nodes, 'edges': all_edges, 'hyperedges': all_hyperedges,
+          'input_tokens': 0, 'output_tokens': 0}
 Path('graphify-out/.graphify_extract.json').write_text(json.dumps(merged, indent=2))
-print(f'Merged: {len(all_nodes)} nodes, {len(all_edges)} edges')
+print(f'Merged: {len(all_nodes)} nodes, {len(all_edges)} edges ({len(ast[\"nodes\"])} AST + {len(all_nodes)-len(ast[\"nodes\"])} semantic)')
 "
 ```
 
-> ⚠️ If `CHUNK_LIST` would be `[]` (no uncached files needed extraction), omit the loop — just merge AST + cached.
+Clean up:
+
+```python
+python -c "
+import glob, os
+for f in (glob.glob('graphify-out/.graphify_chunk_*.json') +
+          ['graphify-out/.graphify_cached.json',
+           'graphify-out/.graphify_semantic_new.json',
+           'graphify-out/.graphify_uncached.txt']):
+    try: os.remove(f)
+    except FileNotFoundError: pass
+"
+```
 
 ### Step 4 - Build graph and cluster
 

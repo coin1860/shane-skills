@@ -7,6 +7,7 @@ tools:
   - grep_search
   - create_file
   - replace_string_in_file
+  - agent/runSubagent
 ---
 
 # GraphRAG Agent
